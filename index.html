@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>赛博格点防线 (Cyber Grid Defense)</title>
+  <!-- 引入谷歌字体 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- 游戏主容器 -->
+  <div id="game-container">
+    
+    <!-- 顶部 HUD (状态栏) -->
+    <header id="hud" class="glass-panel">
+      <div class="hud-item" id="hud-hp-box">
+        <span class="hud-label">CORE INTEGRITY</span>
+        <div class="hud-value-container">
+          <span id="hud-hp">100</span><span class="hud-unit">%</span>
+        </div>
+        <div class="hud-progress-bar"><div id="hud-hp-fill" style="width: 100%;"></div></div>
+      </div>
+      
+      <div class="hud-item" id="hud-energy-box">
+        <span class="hud-label">ENERGY SHARDS</span>
+        <div class="hud-value-container color-energy">
+          <span id="hud-energy">400</span><span class="hud-unit">e</span>
+        </div>
+      </div>
+
+      <div class="hud-item" id="hud-data-box">
+        <span class="hud-label">CORE DATA</span>
+        <div class="hud-value-container color-data">
+          <span id="hud-data">0</span><span class="hud-unit">kb</span>
+        </div>
+      </div>
+
+      <div class="hud-item" id="hud-wave-box">
+        <span class="hud-label">THREAT WAVE</span>
+        <div class="hud-value-container color-wave">
+          <span id="hud-wave">0</span><span class="hud-max-wave">/30</span>
+        </div>
+      </div>
+
+      <div class="hud-item" id="hud-score-box">
+        <span class="hud-label">SCORE</span>
+        <div class="hud-value-container color-score">
+          <span id="hud-score">000000</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- 中间核心区域：左侧科技/控制、中央Canvas、右侧商店/属性 -->
+    <main id="main-area">
+      
+      <!-- 左侧控制面板 -->
+      <section id="left-sidebar" class="sidebar glass-panel">
+        <div class="sidebar-title">SYSTEM OPTIONS</div>
+        <div class="control-group">
+          <button id="btn-next-wave" class="cyber-btn btn-primary glow-cyan">
+            <span class="btn-text">INITIALIZE WAVE</span>
+            <span class="btn-sub">START</span>
+          </button>
+          
+          <div class="speed-control">
+            <button id="btn-speed-1" class="speed-btn active">1X</button>
+            <button id="btn-speed-2" class="speed-btn">2X</button>
+            <button id="btn-speed-4" class="speed-btn">4X</button>
+          </div>
+          
+          <button id="btn-toggle-sound" class="cyber-btn btn-secondary">
+            <span class="btn-text">SOUND: ON</span>
+          </button>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="sidebar-title">SUPER SKILLS</div>
+        <div class="skills-grid">
+          <button id="skill-emp" class="skill-btn locked" title="释放全屏EMP，使所有敌人瘫痪4秒 (消耗: 100e)">
+            <span class="skill-icon">⚡</span>
+            <span class="skill-cost">100e</span>
+            <span class="skill-name">EMP SHOCK</span>
+          </button>
+          <button id="skill-overclock" class="skill-btn locked" title="让所有防御塔超频，攻速翻倍持续6秒 (消耗: 150e)">
+            <span class="skill-icon">🔥</span>
+            <span class="skill-cost">150e</span>
+            <span class="skill-name">OVERCLOCK</span>
+          </button>
+        </div>
+
+        <div class="divider"></div>
+
+        <button id="btn-open-tech" class="cyber-btn btn-secondary glow-purple">
+          <span class="btn-text">OPEN TECH TREE</span>
+          <span class="btn-sub">UPGRADES</span>
+        </button>
+
+        <div class="system-logs-box">
+          <div class="logs-header">DIAGNOSTIC LOGS</div>
+          <div id="system-logs">
+            <div class="log-entry system">> Firewall initialized. Ready for malware...</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 画布视口区域 -->
+      <section id="canvas-wrapper">
+        <canvas id="game-canvas" width="960" height="600"></canvas>
+        
+        <!-- 游戏状态覆盖层 (如主菜单、胜利、失败) -->
+        <div id="overlay-screen" class="overlay flex-center">
+          <div id="start-screen" class="screen-content active">
+            <h1 class="game-title">CYBER GRID<br><span class="highlight">DEFENSE</span></h1>
+            <p class="game-subtitle">赛博格点防线 v1.0</p>
+            <div class="tutorial-preview">
+              <p>⚡ 部署防御塔拦截入侵的恶意程序代码</p>
+              <p>💾 收集 <b>核心数据 (kb)</b> 在科技树中解锁强力全局增益</p>
+              <p>👾 坚持抵御 30 波攻势，消灭终极核心母舰 Boss</p>
+            </div>
+            <button id="btn-start-game" class="cyber-btn btn-primary glow-cyan big">
+              <span class="btn-text">INITIALIZE SYSTEM</span>
+            </button>
+          </div>
+
+          <div id="gameover-screen" class="screen-content">
+            <h2 class="game-title color-danger">SYSTEM COMPROMISED</h2>
+            <p class="game-subtitle">核心已被恶意代码完全侵蚀</p>
+            <div class="stats-report">
+              <p>波次达成: <span id="report-wave" class="color-wave">0</span></p>
+              <p>最终积分: <span id="report-score" class="color-score">0</span></p>
+            </div>
+            <button id="btn-restart-lose" class="cyber-btn btn-danger glow-red big">
+              <span class="btn-text">REBOOT SYSTEM</span>
+            </button>
+          </div>
+
+          <div id="victory-screen" class="screen-content">
+            <h2 class="game-title color-success">THREATS PURGED</h2>
+            <p class="game-subtitle">防火墙防御成功！威胁已彻底清除</p>
+            <div class="stats-report">
+              <p>剩余完整度: <span id="report-hp" class="color-success">100%</span></p>
+              <p>通关得分: <span id="report-victory-score" class="color-score">0</span></p>
+            </div>
+            <button id="btn-restart-win" class="cyber-btn btn-primary glow-cyan big">
+              <span class="btn-text">INITIATE NEW CYCLES</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 右侧防御塔放置与详情面板 -->
+      <section id="right-sidebar" class="sidebar glass-panel">
+        <div class="sidebar-title">BUILD DECK</div>
+        
+        <div id="shop-deck" class="deck-grid">
+          <!-- 激光塔 -->
+          <div class="shop-item active" data-tower-type="laser" title="激光防卫塔：射速极快，单体持续激光攻击">
+            <div class="shop-icon-wrapper color-laser">
+              <span class="shop-icon">📡</span>
+            </div>
+            <div class="shop-info">
+              <div class="shop-name">LASER</div>
+              <div class="shop-cost">100e</div>
+            </div>
+          </div>
+          
+          <!-- 等离子塔 -->
+          <div class="shop-item" data-tower-type="plasma" title="等离子重炮塔：发射等离子爆弹，造成范围溅射爆炸">
+            <div class="shop-icon-wrapper color-plasma">
+              <span class="shop-icon">☄️</span>
+            </div>
+            <div class="shop-info">
+              <div class="shop-name">PLASMA</div>
+              <div class="shop-cost">220e</div>
+            </div>
+          </div>
+
+          <!-- 特斯拉塔 -->
+          <div class="shop-item" data-tower-type="tesla" title="特斯拉电圈：发射连锁电弧，造成中等伤害并减速30%">
+            <div class="shop-icon-wrapper color-tesla">
+              <span class="shop-icon">⚡</span>
+            </div>
+            <div class="shop-info">
+              <div class="shop-name">TESLA</div>
+              <div class="shop-cost">200e</div>
+            </div>
+          </div>
+
+          <!-- 收集器 -->
+          <div class="shop-item" data-tower-type="harvester" title="数据采集器：不具备攻击力，每过10秒产生30e能量">
+            <div class="shop-icon-wrapper color-harvester">
+              <span class="shop-icon">🔋</span>
+            </div>
+            <div class="shop-info">
+              <div class="shop-name">HARVEST</div>
+              <div class="shop-cost">150e</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- 详细选定塔属性与升级面板 -->
+        <div id="inspector-panel" class="inspector-box empty">
+          <div class="inspector-empty-msg">SELECT A GRID OR TOWER FOR DETAILS</div>
+          
+          <div class="inspector-content">
+            <div class="inspector-header">
+              <span id="inspect-icon">📡</span>
+              <div>
+                <div id="inspect-name">LASER TOWER</div>
+                <div id="inspect-level">LEVEL 1</div>
+              </div>
+            </div>
+
+            <div class="inspect-stats">
+              <div class="stat-row">
+                <span>DAMAGE</span>
+                <span id="inspect-damage" class="stat-val">12</span>
+              </div>
+              <div class="stat-row">
+                <span>FIRE RATE</span>
+                <span id="inspect-firerate" class="stat-val">5.0/s</span>
+              </div>
+              <div class="stat-row">
+                <span>RANGE</span>
+                <span id="inspect-range" class="stat-val">150px</span>
+              </div>
+              <div id="inspect-special-row" class="stat-row">
+                <span id="inspect-special-label">SPECIAL</span>
+                <span id="inspect-special-val" class="stat-val">NONE</span>
+              </div>
+            </div>
+
+            <div class="inspect-actions">
+              <button id="btn-upgrade-tower" class="cyber-btn btn-primary small">
+                <span class="btn-text">UPGRADE</span>
+                <span id="inspect-upgrade-cost" class="btn-sub">Cost: 150e</span>
+              </button>
+              <button id="btn-sell-tower" class="cyber-btn btn-danger small">
+                <span class="btn-text">DECOMMISSION</span>
+                <span id="inspect-sell-refund" class="btn-sub">Refund: 50e</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- 当前游戏提示/操作面板 -->
+        <div class="help-box">
+          <div class="help-title">SYSTEM MANUAL</div>
+          <ul class="help-list">
+            <li><span class="key">[LEFT CLICK]</span> 空地建造选中的塔</li>
+            <li><span class="key">[LEFT CLICK]</span> 选中已建塔进行升级/回收</li>
+            <li><span class="key">[RIGHT CLICK]</span> 快速取消建造/选择</li>
+            <li><span class="key">[SPACEBAR]</span> 开启/暂停当前波次</li>
+          </ul>
+        </div>
+      </section>
+    </main>
+
+    <!-- 全局科技树悬浮抽屉面板 (Overlay Drawer) -->
+    <div id="tech-drawer" class="drawer-overlay">
+      <div class="drawer-content glass-panel">
+        <div class="drawer-header">
+          <h2 class="drawer-title">CORE MATRIX TECH TREE</h2>
+          <button id="btn-close-tech" class="close-btn">&times;</button>
+        </div>
+        <p class="drawer-desc">使用在清空威胁波次时提取的 <b>核心数据 (kb)</b> 升级全局被动系统</p>
+        
+        <div class="tech-nodes-container">
+          <!-- 科技节点 1: 射击增幅 -->
+          <div class="tech-card locked" id="tech-laser-dmg" data-cost="5">
+            <div class="tech-header">
+              <span class="tech-icon">💥</span>
+              <div>
+                <div class="tech-node-name">等离子增幅</div>
+                <div class="tech-node-cost">COST: 5 kb</div>
+              </div>
+            </div>
+            <p class="tech-node-desc">等离子重炮 (PLASMA) 的爆炸范围提升 30%，伤害提升 20%</p>
+            <button class="cyber-btn btn-unlock small">UNLOCK</button>
+          </div>
+
+          <!-- 科技节点 2: 电磁链扩容 -->
+          <div class="tech-card locked" id="tech-tesla-chain" data-cost="8">
+            <div class="tech-header">
+              <span class="tech-icon">⚡</span>
+              <div>
+                <div class="tech-node-name">特斯拉串联</div>
+                <div class="tech-node-cost">COST: 8 kb</div>
+              </div>
+            </div>
+            <p class="tech-node-desc">特斯拉电圈 (TESLA) 的闪电链弹射数 +1，且减速效果提升至 50%</p>
+            <button class="cyber-btn btn-unlock small">UNLOCK</button>
+          </div>
+
+          <!-- 科技节点 3: 经济超频 -->
+          <div class="tech-card locked" id="tech-harvester-boost" data-cost="10">
+            <div class="tech-header">
+              <span class="tech-icon">🔋</span>
+              <div>
+                <div class="tech-node-name">量子萃取优化</div>
+                <div class="tech-node-cost">COST: 10 kb</div>
+              </div>
+            </div>
+            <p class="tech-node-desc">数据采集器 (HARVEST) 生成的能量提升 50% (从 30e 提至 45e)</p>
+            <button class="cyber-btn btn-unlock small">UNLOCK</button>
+          </div>
+
+          <!-- 科技节点 4: 超频技能解锁 -->
+          <div class="tech-card locked" id="tech-skill-overclock" data-cost="15">
+            <div class="tech-header">
+              <span class="tech-icon">🔥</span>
+              <div>
+                <div class="tech-node-name">解锁: 超频技能</div>
+                <div class="tech-node-cost">COST: 15 kb</div>
+              </div>
+            </div>
+            <p class="tech-node-desc">解锁侧边栏中的全局“超频技能” (OVERCLOCK)，短时间内大幅提升防御塔攻速</p>
+            <button class="cyber-btn btn-unlock small">UNLOCK</button>
+          </div>
+
+          <!-- 科技节点 5: 终端装甲 -->
+          <div class="tech-card locked" id="tech-base-regen" data-cost="12">
+            <div class="tech-header">
+              <span class="tech-icon">🛡️</span>
+              <div>
+                <div class="tech-node-name">核心强固装甲</div>
+                <div class="tech-node-cost">COST: 12 kb</div>
+              </div>
+            </div>
+            <p class="tech-node-desc">增加核心最大完整度 50% (核心生命上限变为 150%)，且每波结束自我修复 10%</p>
+            <button class="cyber-btn btn-unlock small">UNLOCK</button>
+          </div>
+
+          <!-- 科技节点 6: EMP冲击解锁 -->
+          <div class="tech-card locked" id="tech-skill-emp" data-cost="20">
+            <div class="tech-header">
+              <span class="tech-icon">🔌</span>
+              <div>
+                <div class="tech-node-name">解锁: EMP电磁冲击</div>
+                <div class="tech-node-cost">COST: 20 kb</div>
+              </div>
+            </div>
+            <p class="tech-node-desc">解锁侧边栏中的全局“EMP技能” (EMP SHOCK)，使全屏敌人短时间内陷入瘫痪</p>
+            <button class="cyber-btn btn-unlock small">UNLOCK</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 按顺序引入游戏脚本 -->
+  <script src="js/sound.js"></script>
+  <script src="js/particles.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/enemies.js"></script>
+  <script src="js/towers.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/game.js"></script>
+
+</body>
+</html>

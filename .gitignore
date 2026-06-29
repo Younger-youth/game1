@@ -1,0 +1,11 @@
+# Node dependencies
+node_modules/
+package-lock.json
+
+# Electron build outputs
+dist/
+
+# Local OS files
+.DS_Store
+Thumbs.db
+*.log
