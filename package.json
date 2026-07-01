@@ -33,8 +33,10 @@
       ]
     },
     "nsis": {
-      "oneClick": true,
-      "allowToChangeInstallationDirectory": false,
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerSidebar": "build/installerSidebar.png",
+      "installerHeader": "build/installerHeader.png",
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "赛博格点防线"
